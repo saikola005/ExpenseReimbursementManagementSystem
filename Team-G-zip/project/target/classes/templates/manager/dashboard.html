@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Manager Dashboard - Expense Reimbursement System</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+	<style>
+		body {
+			background-color: #f8f9fa;
+		}
+
+		.card {
+			border: none;
+			box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+		}
+
+		.status-badge {
+			font-size: 0.875rem;
+		}
+
+		.nav-tabs .nav-link.active {
+			background-color: #0d6efd;
+			color: white;
+		}
+	</style>
+</head>
+
+<body>
+	<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+		<div class="container">
+			<a class="navbar-brand" href="#">
+				<i class="fas fa-receipt me-2"></i>
+				Expense Reimbursement System
+			</a>
+			<div class="navbar-nav ms-auto">
+				<span class="navbar-text me-3" th:text="'Welcome, ' + ${employee.name} + ' (Manager)'">Welcome,
+					Manager</span>
+				<a class="nav-link" href="/logout">
+					<i class="fas fa-sign-out-alt"></i> Logout
+				</a>
+			</div>
+		</div>
+	</nav>
+
+	<div class="container mt-4">
+		<h2><i class="fas fa-tachometer-alt me-2"></i>Manager Dashboard</h2>
+
+		<div th:if="${param.approved}" class="alert alert-success alert-dismissible fade show" role="alert">
+			<i class="fas fa-check-circle me-2"></i>
+			Expense approved successfully!
+			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+		</div>
+
+		<div th:if="${param.rejected}" class="alert alert-info alert-dismissible fade show" role="alert">
+			<i class="fas fa-times-circle me-2"></i>
+			Expense rejected successfully!
+			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+		</div>
+
+		<div class="row mb-4">
+			<div class="col-md-3">
+				<div class="card text-white bg-primary">
+					<div class="card-body d-flex justify-content-between align-items-center">
+						<div>
+							<h4 class="card-title" th:text="${allExpenses != null} ? ${allExpenses.size()} : 0">0</h4>
+							<p class="card-text">Total Expenses</p>
+						</div>
+						<i class="fas fa-receipt fa-2x"></i>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card text-white bg-warning">
+					<div class="card-body d-flex justify-content-between align-items-center">
+						<div>
+							<h4 class="card-title" th:text="${pendingExpenses != null} ? ${pendingExpenses.size()} : 0">
+								0</h4>
+							<p class="card-text">Pending Review</p>
+						</div>
+						<i class="fas fa-clock fa-2x"></i>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card text-white bg-success">
+					<div class="card-body d-flex justify-content-between align-items-center">
+						<div>
+							<h4 class="card-title" th:text="${approvedCount}">0</h4>
+							<p class="card-text">Approved</p>
+						</div>
+						<i class="fas fa-check fa-2x"></i>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card text-white bg-danger">
+					<div class="card-body d-flex justify-content-between align-items-center">
+						<div>
+							<h4 class="card-title" th:text="${rejectedCount}">0</h4>
+							<p class="card-text">Rejected</p>
+						</div>
+						<i class="fas fa-times fa-2x"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card">
+			<div class="card-header">
+				<ul class="nav nav-tabs card-header-tabs" id="managerTabs" role="tablist">
+					<li class="nav-item" role="presentation">
+						<button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending"
+							type="button" role="tab" aria-controls="pending" aria-selected="true">
+							<i class="fas fa-clock me-2"></i>Pending Approval (<span
+								th:text="${pendingExpenses != null} ? ${pendingExpenses.size()} : 0">0</span>)
+						</button>
+					</li>
+					<li class="nav-item" role="presentation">
+						<button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button"
+							role="tab" aria-controls="all" aria-selected="false">
+							<i class="fas fa-list me-2"></i>All Expenses
+						</button>
+					</li>
+				</ul>
+			</div>
+			<div class="card-body">
+				<div class="tab-content" id="managerTabsContent">
+					<div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+						<div th:if="${pendingExpenses == null or #lists.isEmpty(pendingExpenses)}"
+							class="text-center py-5">
+							<i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+							<p class="text-muted">No pending expenses for approval.</p>
+						</div>
+						<div th:if="${pendingExpenses != null and !#lists.isEmpty(pendingExpenses)}"
+							class="table-responsive">
+							<table class="table table-hover">
+								<thead class="table-light">
+									<tr>
+										<th>Employee</th>
+										<th>Date</th>
+										<th>Description</th>
+										<th>Category</th>
+										<th>Amount</th>
+										<th>Actions</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="expense : ${pendingExpenses}">
+										<td th:text="${expense.employee.name}">Employee</td>
+										<td th:text="${#temporals.format(expense.expenseDate, 'MMM dd, yyyy')}">Date
+										</td>
+										<td th:text="${expense.description}">Description</td>
+										<td><span class="badge bg-secondary"
+												th:text="${expense.category}">Category</span></td>
+										<td th:text="'$' + ${#numbers.formatDecimal(expense.amount, 1, 2)}">Amount</td>
+										<td>
+											<div class="btn-group" role="group">
+												<a th:href="@{/manager/expense/{id}(id=${expense.id})}"
+													class="btn btn-sm btn-outline-primary" title="View Details">
+													<i class="fas fa-eye"></i>
+												</a>
+												<form th:action="@{/manager/expense/{id}/approve(id=${expense.id})}"
+													method="post" style="display:inline;">
+													<button type="submit" class="btn btn-sm btn-success"
+														onclick="return confirm('Approve this expense?')">
+														<i class="fas fa-check"></i>
+													</button>
+												</form>
+												<form th:action="@{/manager/expense/{id}/reject(id=${expense.id})}"
+													method="post" style="display:inline;">
+													<button type="submit" class="btn btn-sm btn-danger"
+														onclick="return confirm('Reject this expense?')">
+														<i class="fas fa-times"></i>
+													</button>
+												</form>
+											</div>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="tab-pane fade" id="all" role="tabpanel" aria-labelledby="all-tab">
+						<div th:if="${allExpenses == null or #lists.isEmpty(allExpenses)}" class="text-center py-5">
+							<i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+							<p class="text-muted">No expenses submitted yet.</p>
+						</div>
+						<div th:if="${allExpenses != null and !#lists.isEmpty(allExpenses)}" class="table-responsive">
+							<table class="table table-hover">
+								<thead class="table-light">
+									<tr>
+										<th>Employee</th>
+										<th>Date</th>
+										<th>Description</th>
+										<th>Category</th>
+										<th>Amount</th>
+										<th>Status</th>
+										<th>Actions</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="expense : ${allExpenses}">
+										<td th:text="${expense.employee.name}">Employee</td>
+										<td th:text="${#temporals.format(expense.expenseDate, 'MMM dd, yyyy')}">Date
+										</td>
+										<td th:text="${expense.description}">Description</td>
+										<td><span class="badge bg-secondary"
+												th:text="${expense.category}">Category</span></td>
+										<td th:text="'$' + ${#numbers.formatDecimal(expense.amount, 1, 2)}">Amount</td>
+										<td>
+											<span class="badge status-badge"
+												th:classappend="${expense.status == 'PENDING'} ? 'bg-warning' : (${expense.status == 'APPROVED'} ? 'bg-success' : 'bg-danger')"
+												th:text="${expense.status}">Status</span>
+										</td>
+										<td>
+											<a th:href="@{/manager/expense/{id}(id=${expense.id})}"
+												class="btn btn-sm btn-outline-primary">
+												<i class="fas fa-eye"></i> View
+											</a>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
